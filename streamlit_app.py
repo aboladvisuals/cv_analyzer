@@ -290,10 +290,20 @@ with tab_statement:
 
         industry = None
         organisation = None
+        structured = False
         if tier == StatementTier.INDUSTRY:
             industry = st.text_input("Industry (e.g. 'Healthcare')")
         elif tier == StatementTier.VACANCY:
             organisation = st.text_input("Organisation name (optional)") or None
+            structured = st.checkbox(
+                "Structured format — one heading per Essential/Desirable criterion "
+                "(matches NHS/Civil Service application formats)"
+            )
+
+        max_words_input = st.number_input(
+            "Maximum word count (0 for no limit)", min_value=0, value=0, step=50
+        )
+        max_words = int(max_words_input) or None
 
         if st.button("Generate statement", type="primary"):
             if not role.strip():
@@ -304,6 +314,7 @@ with tab_statement:
                 stmt_result, quality_result = app.generate_statement_package(
                     bundle.gap_result, target_role=role, tier=tier,
                     organisation=organisation, industry=industry,
+                    structured=structured, max_words=max_words,
                 )
                 st.session_state.stmt_result = stmt_result
                 st.session_state.quality_result = quality_result
@@ -316,6 +327,8 @@ with tab_statement:
         if stmt_result is not None:
             st.markdown(f"### {stmt_result.tier.capitalize()} Statement ({stmt_result.word_count} words)")
             st.write(stmt_result.statement_text)
+            if stmt_result.trimmed_for_word_limit:
+                st.info("Some lower-priority content was trimmed to fit the word limit.")
             if stmt_result.limitation_note:
                 st.info(stmt_result.limitation_note)
 

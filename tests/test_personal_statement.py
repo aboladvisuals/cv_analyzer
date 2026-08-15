@@ -227,3 +227,93 @@ def test_unknown_tier_raises_value_error():
         personal_statement.generate_personal_statement(
             gap_result, PersonalStatementInput(target_role="Data Analyst", tier="not_a_real_tier")
         )
+
+
+def test_structured_mode_only_valid_for_vacancy_tier():
+    gap_result = _build_gap_result()
+
+    import pytest
+    with pytest.raises(ValueError):
+        personal_statement.generate_personal_statement(
+            gap_result,
+            PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.MASTER, structured=True),
+        )
+
+
+def test_structured_mode_produces_a_heading_per_requirement():
+    gap_result = _build_gap_result()
+
+    result = personal_statement.generate_personal_statement(
+        gap_result,
+        PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.VACANCY, structured=True),
+    )
+
+    # SQL is REQUIRED in the target JD — its heading should reflect that.
+    assert "(Essential)" in result.statement_text
+    assert "SQL" in result.statement_text
+    # Structure means one requirement per block, separated by blank lines.
+    assert result.statement_text.count("\n\n") >= len(result.included_requirements)
+
+
+def test_narrative_mode_has_no_criteria_headings():
+    gap_result = _build_gap_result()
+
+    result = personal_statement.generate_personal_statement(
+        gap_result,
+        PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.VACANCY, structured=False),
+    )
+
+    assert "(Essential)" not in result.statement_text
+    assert "(Desirable)" not in result.statement_text
+
+
+def test_max_words_trims_the_statement_and_marks_it_trimmed():
+    gap_result = _build_gap_result()
+
+    full_result = personal_statement.generate_personal_statement(
+        gap_result, PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.MASTER)
+    )
+    # Set a limit well below the untrimmed word count to force trimming.
+    tight_limit = max(30, full_result.word_count - 40)
+
+    trimmed_result = personal_statement.generate_personal_statement(
+        gap_result,
+        PersonalStatementInput(
+            target_role="Data Analyst", tier=StatementTier.MASTER, max_words=tight_limit
+        ),
+    )
+
+    assert trimmed_result.word_count <= tight_limit
+    assert trimmed_result.trimmed_for_word_limit
+    assert len(trimmed_result.included_requirements) < len(full_result.included_requirements)
+    # excluded_requirements must include what got trimmed out, not just
+    # the requirements that never qualified in the first place.
+    assert set(full_result.included_requirements) - set(trimmed_result.included_requirements)
+
+
+def test_included_requirements_matches_what_is_actually_in_the_trimmed_text():
+    gap_result = _build_gap_result()
+
+    result = personal_statement.generate_personal_statement(
+        gap_result,
+        PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.MASTER, max_words=60),
+    )
+
+    # Every requirement claimed as "included" must actually be traceable
+    # in the rendered text via its natural-language phrasing — otherwise
+    # the quality/coverage scores downstream would be counting something
+    # that was silently trimmed away.
+    for requirement in result.included_requirements:
+        phrase = personal_statement.NATURAL_PHRASING.get(requirement, requirement.lower())
+        assert phrase.split()[0].lower() in result.statement_text.lower()
+
+
+def test_generous_word_limit_does_not_trim_anything():
+    gap_result = _build_gap_result()
+
+    result = personal_statement.generate_personal_statement(
+        gap_result,
+        PersonalStatementInput(target_role="Data Analyst", tier=StatementTier.MASTER, max_words=1000),
+    )
+
+    assert not result.trimmed_for_word_limit

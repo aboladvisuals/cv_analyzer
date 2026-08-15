@@ -40,6 +40,7 @@ not after.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 
 from config import RequirementCategory
 from gap_analyser import GapAnalysisResult, GapAnalysisEntry, GapMessageType
@@ -98,10 +99,11 @@ def generate_optimisation_suggestions(gap_result: GapAnalysisResult) -> Optimisa
 
         if entry.message_type == GapMessageType.TRANSFERABLE_EVIDENCE:
             suggestions.append(_build_transferable_suggestion(entry))
+            quantification_rec = _build_quantification_recommendation(entry)
+            if quantification_rec:
+                recommendations.append(quantification_rec)
         elif entry.message_type == GapMessageType.HAS_SKILL:
-            recommendation = _build_has_skill_recommendation(entry)
-            if recommendation:
-                recommendations.append(recommendation)
+            recommendations.extend(_build_has_skill_recommendations(entry))
         elif entry.message_type == GapMessageType.NEEDS_STRONGER_EVIDENCE:
             recommendations.append(_build_needs_stronger_recommendation(entry))
 
@@ -143,26 +145,70 @@ def _build_transferable_suggestion(entry: GapAnalysisEntry) -> CVEditSuggestion:
     )
 
 
-def _build_has_skill_recommendation(entry: GapAnalysisEntry) -> CVRecommendation | None:
+def _build_has_skill_recommendations(entry: GapAnalysisEntry) -> list[CVRecommendation]:
+    recommendations: list[CVRecommendation] = []
+    phrase = NATURAL_PHRASING.get(entry.requirement, entry.requirement.lower())
+
     # HAS_SKILL evidence is checked against "experience" before "skills"
     # (see evidence_mapper.STRONG_EVIDENCE_SECTIONS) — so if the source
     # here is "skills", that means it was NOT also found in a richer,
     # more descriptive section. A bare skills-list entry is real evidence,
     # but weaker than a demonstrated example.
-    if entry.evidence_source != "skills":
-        return None  # already well-represented elsewhere — nothing to suggest
+    if entry.evidence_source == "skills":
+        recommendations.append(
+            CVRecommendation(
+                requirement=entry.requirement,
+                section=entry.evidence_source,
+                advice=(
+                    f"'{phrase}' currently only appears as a bare skills-list entry. "
+                    f"If you have a genuine example of using it, adding a specific "
+                    f"bullet under Experience or Projects would make this evidence "
+                    f"stronger — but only add this if it's genuinely true."
+                ),
+                reason="A demonstrated example is generally stronger evidence than a skills list alone.",
+            )
+        )
+
+    quantification_rec = _build_quantification_recommendation(entry)
+    if quantification_rec:
+        recommendations.append(quantification_rec)
+
+    return recommendations
+
+
+_DIGIT_PATTERN = re.compile(r"\d")
+
+
+def _build_quantification_recommendation(entry: GapAnalysisEntry) -> CVRecommendation | None:
+    """
+    Nudges toward adding a measurable outcome — a number, percentage, or
+    time/volume figure — where the current evidence has none. This is
+    advice only, never a proposed rewrite: we have no way to invent an
+    honest number, so we ask the candidate to add one only if it's real.
+
+    Deliberately simple detection: presence of any digit in the snippet.
+    This is a known, accepted limitation — it won't catch a spelled-out
+    quantity like "three internal teams", only literal digits/percentages
+    (e.g. "40%", "3 teams", "£2,000"). A false "lacks quantification"
+    flag on already-quantified evidence is a minor inconvenience; the
+    alternative (a more elaborate parser for spelled-out numbers) isn't
+    worth the added complexity for what it would catch.
+    """
+    if _DIGIT_PATTERN.search(entry.evidence_snippet):
+        return None
 
     phrase = NATURAL_PHRASING.get(entry.requirement, entry.requirement.lower())
     return CVRecommendation(
         requirement=entry.requirement,
         section=entry.evidence_source,
         advice=(
-            f"'{phrase}' currently only appears as a bare skills-list entry. "
-            f"If you have a genuine example of using it, adding a specific "
-            f"bullet under Experience or Projects would make this evidence "
-            f"stronger — but only add this if it's genuinely true."
+            f"Your evidence for '{phrase}' doesn't currently include a specific "
+            f"number or measurable outcome (e.g. a percentage, amount of time "
+            f"saved, or volume handled). If you have a genuine figure, adding "
+            f"one would make this evidence more compelling to a hiring manager "
+            f"— but only if it's accurate."
         ),
-        reason="A demonstrated example is generally stronger evidence than a skills list alone.",
+        reason="Quantified achievements are generally more persuasive than general descriptions.",
     )
 
 

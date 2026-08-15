@@ -121,3 +121,52 @@ def test_disclaimer_is_present_and_warns_against_untrue_additions():
 
     assert "genuinely true" in result.disclaimer.lower()
     assert "automatically" in result.disclaimer.lower()
+
+
+def test_evidence_without_a_number_gets_a_quantification_recommendation():
+    # The sample CV's SQL evidence ("...for three internal teams") has no
+    # literal digit — the spelled-out "three" is a known, accepted
+    # limitation of the simple digit-based detector.
+    gap_result = _build_gap_result()
+    result = optimiser.generate_optimisation_suggestions(gap_result)
+
+    sql_quant_recs = [
+        r for r in result.recommendations
+        if r.requirement == "SQL" and "measurable outcome" in r.advice.lower()
+    ]
+    assert sql_quant_recs
+
+
+def test_evidence_with_a_real_number_gets_no_quantification_recommendation():
+    import gap_analyser
+
+    entry = gap_analyser.GapAnalysisEntry(
+        requirement="SQL",
+        jd_frequency="3/3",
+        target_jd_category="required",
+        evidence_status="strong_match",
+        evidence_source="experience",
+        evidence_snippet="Reduced report generation time by 40% using optimised SQL queries.",
+        message_type="has_skill",
+        message="You have direct evidence of SQL in your experience section.",
+        priority="none",
+    )
+    gap_result = gap_analyser.GapAnalysisResult(entries=[entry])
+
+    result = optimiser.generate_optimisation_suggestions(gap_result)
+
+    quant_recs = [r for r in result.recommendations if "measurable outcome" in r.advice.lower()]
+    assert quant_recs == []
+
+
+def test_transferable_evidence_without_a_number_also_gets_the_nudge():
+    # The NHS A&E project snippet has no digit either — the nudge should
+    # apply to transferable evidence, not just direct skill matches.
+    gap_result = _build_gap_result()
+    result = optimiser.generate_optimisation_suggestions(gap_result)
+
+    nhs_quant_recs = [
+        r for r in result.recommendations
+        if r.requirement == "Healthcare/NHS data experience" and "measurable outcome" in r.advice.lower()
+    ]
+    assert nhs_quant_recs

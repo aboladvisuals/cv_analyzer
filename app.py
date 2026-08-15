@@ -90,10 +90,13 @@ def generate_statement_package(
     tier: str,
     organisation: str | None = None,
     industry: str | None = None,
+    structured: bool = False,
+    max_words: int | None = None,
 ) -> tuple[PersonalStatementResult, StatementQualityResult]:
     """Generates a personal statement at the given tier, then quality-checks it."""
     stmt_input = PersonalStatementInput(
-        target_role=target_role, tier=tier, organisation=organisation, industry=industry
+        target_role=target_role, tier=tier, organisation=organisation, industry=industry,
+        structured=structured, max_words=max_words,
     )
     stmt_result = personal_statement.generate_personal_statement(gap_result, stmt_input)
     quality_result = statement_quality.check_statement_quality(gap_result, stmt_result, stmt_input)
@@ -161,6 +164,8 @@ def print_statement_package(
 ) -> None:
     print(f"\n===== {stmt_result.tier.upper()} STATEMENT ({stmt_result.word_count} words) =====\n")
     print(stmt_result.statement_text)
+    if stmt_result.trimmed_for_word_limit:
+        print("\n[Note] Some lower-priority content was trimmed to fit the word limit.")
     if stmt_result.limitation_note:
         print(f"\n[Note] {stmt_result.limitation_note}")
 
@@ -268,13 +273,28 @@ def _maybe_generate_statement(
 
     industry = None
     organisation = None
+    structured = False
     if tier == StatementTier.INDUSTRY:
         industry = input("Industry (e.g. 'Healthcare'): ").strip()
     elif tier == StatementTier.VACANCY:
         organisation = input("Organisation name (optional, press Enter to skip): ").strip() or None
+        format_choice = input(
+            "Format:\n"
+            "  1) Narrative (flowing prose)\n"
+            "  2) Structured (one heading per Essential/Desirable criterion — "
+            "matches NHS/Civil Service application formats)\n"
+            "Choice: "
+        ).strip()
+        structured = format_choice == "2"
+
+    max_words_input = input(
+        "Maximum word count (optional, press Enter for no limit): "
+    ).strip()
+    max_words = int(max_words_input) if max_words_input.isdigit() else None
 
     stmt_result, quality_result = generate_statement_package(
-        gap_result, target_role=target_role, tier=tier, organisation=organisation, industry=industry
+        gap_result, target_role=target_role, tier=tier, organisation=organisation,
+        industry=industry, structured=structured, max_words=max_words,
     )
     print_statement_package(stmt_result, quality_result)
     _maybe_polish_with_ai(stmt_result, gap_result)

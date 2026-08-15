@@ -136,6 +136,8 @@ class PersonalStatementInput:
     tier: str                      # config.StatementTier value
     organisation: str | None = None  # only used for VACANCY tier openings
     industry: str | None = None      # required for INDUSTRY tier
+    structured: bool = False         # only valid for VACANCY tier — see below
+    max_words: int | None = None     # trims body content to fit, if set
 
 
 @dataclass
@@ -146,6 +148,7 @@ class PersonalStatementResult:
     excluded_requirements: list[str] = field(default_factory=list)
     limitation_note: str = ""
     word_count: int = 0
+    trimmed_for_word_limit: bool = False
 
 
 MASTER_LIMITATION_NOTE = (
@@ -159,6 +162,14 @@ def generate_personal_statement(
     gap_result: GapAnalysisResult, statement_input: PersonalStatementInput
 ) -> PersonalStatementResult:
     tier = statement_input.tier
+
+    if statement_input.structured and tier != StatementTier.VACANCY:
+        raise ValueError(
+            "Structured (criteria-by-criteria) mode is only valid for the "
+            "VACANCY tier — it addresses one target job description's own "
+            "requirements directly, which doesn't make sense for a "
+            "reusable Master or Industry statement."
+        )
 
     if tier == StatementTier.MASTER:
         return _generate_master(gap_result, statement_input)
@@ -213,24 +224,27 @@ def _generate_master(
         selected = eligible
 
     selected = _sort_for_master(selected)
-    excluded = [e.requirement for e in gap_result.entries if e not in selected]
 
-    text = _assemble_statement(
-        opening=_master_opening(statement_input.target_role, selected),
-        body_entries=selected,
-        closing=(
+    text, kept, trimmed = _fit_to_word_limit(
+        _assemble_statement,
+        _master_opening(statement_input.target_role, selected),
+        selected,
+        (
             f"I'm looking to bring this experience to a {statement_input.target_role} "
             f"role, and I'm keen to keep developing these skills further."
         ),
+        statement_input.max_words,
     )
+    excluded = [e.requirement for e in gap_result.entries if e not in kept]
 
     return PersonalStatementResult(
         tier=StatementTier.MASTER,
         statement_text=text,
-        included_requirements=[e.requirement for e in selected],
+        included_requirements=[e.requirement for e in kept],
         excluded_requirements=excluded,
         limitation_note=MASTER_LIMITATION_NOTE,
         word_count=len(text.split()),
+        trimmed_for_word_limit=trimmed,
     )
 
 
@@ -286,7 +300,6 @@ def _generate_industry(
         selected = eligible
 
     selected = _sort_for_master(selected)  # same evidence-strength ordering
-    excluded = [e.requirement for e in gap_result.entries if e not in selected]
 
     opening = _industry_opening(statement_input.target_role, industry, selected)
     closing = (
@@ -295,15 +308,19 @@ def _generate_industry(
         f"skills feel especially relevant."
     )
 
-    text = _assemble_statement(opening=opening, body_entries=selected, closing=closing)
+    text, kept, trimmed = _fit_to_word_limit(
+        _assemble_statement, opening, selected, closing, statement_input.max_words
+    )
+    excluded = [e.requirement for e in gap_result.entries if e not in kept]
 
     return PersonalStatementResult(
         tier=StatementTier.INDUSTRY,
         statement_text=text,
-        included_requirements=[e.requirement for e in selected],
+        included_requirements=[e.requirement for e in kept],
         excluded_requirements=excluded,
         limitation_note=MASTER_LIMITATION_NOTE,  # same reusability caveat applies
         word_count=len(text.split()),
+        trimmed_for_word_limit=trimmed,
     )
 
 
@@ -340,7 +357,6 @@ def _generate_vacancy(
         selected = eligible
 
     selected = _sort_for_vacancy(selected)
-    excluded = [e.requirement for e in gap_result.entries if e not in selected]
 
     opening = _vacancy_opening(statement_input, selected)
     closing = (
@@ -349,15 +365,20 @@ def _generate_vacancy(
         f"opportunity to discuss it further."
     )
 
-    text = _assemble_statement(opening=opening, body_entries=selected, closing=closing)
+    assembler = _assemble_structured_statement if statement_input.structured else _assemble_statement
+    text, kept, trimmed = _fit_to_word_limit(
+        assembler, opening, selected, closing, statement_input.max_words
+    )
+    excluded = [e.requirement for e in gap_result.entries if e not in kept]
 
     return PersonalStatementResult(
         tier=StatementTier.VACANCY,
         statement_text=text,
-        included_requirements=[e.requirement for e in selected],
+        included_requirements=[e.requirement for e in kept],
         excluded_requirements=excluded,
         limitation_note="",  # no reusability caveat needed — this tier IS vacancy-specific
         word_count=len(text.split()),
+        trimmed_for_word_limit=trimmed,
     )
 
 
@@ -427,28 +448,79 @@ _NEEDS_STRONGER_TEMPLATES = [
     "I also have some experience relevant to {phrase}: {snippet}",
 ]
 
+_CATEGORY_LABELS = {
+    "required": "Essential",
+    "preferred": "Desirable",
+    "responsibility": "Responsibility",
+    "competency": "Competency",
+}
 
-def _assemble_statement(opening: str, body_entries: list[GapAnalysisEntry], closing: str) -> str:
-    # Two different requirement labels (e.g. "Dashboards" and "Power BI")
-    # can both be matched from the SAME underlying CV bullet — without
-    # deduplicating, the statement would describe that one bullet twice,
-    # almost verbatim, as if it were two separate pieces of evidence.
-    # Dedupe by evidence_snippet BEFORE capping the body length, so a
-    # skipped duplicate doesn't crowd out a genuinely distinct point
-    # further down the list.
+
+def _dedupe_by_snippet(entries: list[GapAnalysisEntry]) -> list[GapAnalysisEntry]:
+    """
+    Two different requirement labels (e.g. "Dashboards" and "Power BI")
+    can both be matched from the SAME underlying CV bullet — without
+    deduplicating, the statement would describe that one bullet twice,
+    almost verbatim, as if it were two separate pieces of evidence.
+    """
     seen_snippets: set[str] = set()
-    deduped_entries: list[GapAnalysisEntry] = []
-    for entry in body_entries:
+    deduped: list[GapAnalysisEntry] = []
+    for entry in entries:
         snippet_key = entry.evidence_snippet.strip().lower()
         if snippet_key and snippet_key in seen_snippets:
             continue
         seen_snippets.add(snippet_key)
-        deduped_entries.append(entry)
+        deduped.append(entry)
+    return deduped
 
-    capped_entries = deduped_entries[:_MAX_BODY_ENTRIES]
-    body_sentences = [
-        _sentence_for(entry, index) for index, entry in enumerate(capped_entries)
-    ]
+
+def _fit_to_word_limit(
+    assembler_fn,
+    opening: str,
+    candidate_entries: list[GapAnalysisEntry],
+    closing: str,
+    max_words: int | None,
+) -> tuple[str, list[GapAnalysisEntry], bool]:
+    """
+    Single place responsible for deciding how many body entries actually
+    make it into the rendered text. Without a word limit, this is just
+    "dedupe, then cap at _MAX_BODY_ENTRIES" (the original behaviour).
+    With a word limit (e.g. an NHS/Civil Service statement capped at 500
+    words), entries are dropped from the LOWEST-priority end first —
+    they're already sorted by priority before reaching this function —
+    until the rendered text fits, or until nothing is left.
+
+    Returns (text, entries_actually_used, was_trimmed_for_word_limit).
+    entries_actually_used is what included_requirements/excluded_
+    requirements should be built from — reporting a requirement as
+    "included" when it was trimmed out of the final text would be
+    inaccurate.
+    """
+    deduped = _dedupe_by_snippet(candidate_entries)
+    default_cap = min(len(deduped), _MAX_BODY_ENTRIES)
+
+    if max_words is None:
+        kept = deduped[:default_cap]
+        return assembler_fn(opening, kept, closing), kept, False
+
+    for count in range(default_cap, -1, -1):
+        kept = deduped[:count]
+        text = assembler_fn(opening, kept, closing)
+        if len(text.split()) <= max_words:
+            return text, kept, count < default_cap
+
+    # Even zero body entries (just opening + closing) exceeds the limit —
+    # nothing more can be trimmed; return the minimal version anyway
+    # rather than silently ignoring the requested limit.
+    kept: list[GapAnalysisEntry] = []
+    return assembler_fn(opening, kept, closing), kept, True
+
+
+def _assemble_statement(opening: str, body_entries: list[GapAnalysisEntry], closing: str) -> str:
+    """Narrative mode: body entries flow together as one paragraph.
+    `body_entries` is assumed already deduped and capped by the caller
+    (see _fit_to_word_limit) — this function only renders."""
+    body_sentences = [_sentence_for(entry, index) for index, entry in enumerate(body_entries)]
     body_paragraph = " ".join(body_sentences)
 
     paragraphs = [opening]
@@ -456,6 +528,30 @@ def _assemble_statement(opening: str, body_entries: list[GapAnalysisEntry], clos
         paragraphs.append(body_paragraph)
     paragraphs.append(closing)
 
+    return "\n\n".join(paragraphs)
+
+
+def _assemble_structured_statement(
+    opening: str, body_entries: list[GapAnalysisEntry], closing: str
+) -> str:
+    """
+    Criteria-by-criteria mode: one heading + short paragraph per
+    requirement, matching the format many NHS/Civil Service application
+    forms expect (addressing each Essential/Desirable point directly,
+    rather than a single flowing narrative). Only meaningful for the
+    VACANCY tier, since headings are labelled with the TARGET job
+    description's own framing (Essential/Desirable/etc.) — see
+    generate_personal_statement()'s validation.
+    """
+    blocks: list[str] = []
+    for index, entry in enumerate(body_entries):
+        phrase = NATURAL_PHRASING.get(entry.requirement, entry.requirement.lower())
+        label = _CATEGORY_LABELS.get(entry.target_jd_category or "", "Relevant experience")
+        heading = f"{phrase[:1].upper()}{phrase[1:]} ({label})"
+        sentence = _sentence_for(entry, index)
+        blocks.append(f"{heading}\n{sentence}")
+
+    paragraphs = [opening, *blocks, closing]
     return "\n\n".join(paragraphs)
 
 
