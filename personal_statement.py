@@ -108,6 +108,25 @@ NATURAL_PHRASING: dict[str, str] = {
     "PMP": "PMP",
     "GDPR": "GDPR and data protection",
     "Data governance": "data governance",
+
+    # Matches the early years / childcare / local government additions
+    "EYFS": "the EYFS framework",
+    "Safeguarding": "safeguarding",
+    "Special educational needs (SEND)": "supporting children with special educational needs",
+    "Ofsted": "Ofsted requirements",
+    "Child development": "child development",
+    "Paediatric first aid": "paediatric first aid",
+    "DBS check": "a DBS check",
+    "Behaviour management": "behaviour management",
+    "Parental engagement": "parental engagement",
+    "Child protection": "child protection",
+    "Multi-agency working": "multi-agency working",
+    "Level 3 childcare qualification": "a Level 3 childcare qualification",
+    "Key worker (childcare)": "acting as a key worker",
+    "Inclusive practice": "inclusive practice",
+    "Local authority": "working with the local authority",
+    "Case management": "case management",
+    "Social work": "social work",
 }
 
 

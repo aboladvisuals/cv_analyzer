@@ -125,3 +125,54 @@ def test_azure_and_java_require_disambiguating_context():
 
     assert "Microsoft Azure" not in phrases
     assert "Java programming" not in phrases
+
+
+def test_early_years_vocabulary_matches_real_requirements():
+    text = (
+        "Essential Criteria\n"
+        "- Sound knowledge of the EYFS and child development\n"
+        "- Experience supporting children with special educational needs\n"
+        "- Enhanced DBS check required\n"
+        "- Confident with safeguarding and child protection procedures\n"
+        "- Level 3 childcare qualification (or equivalent)\n"
+        "\n"
+        "Key Responsibilities\n"
+        "- Acting as key worker for a small group of children\n"
+        "- Building strong parental engagement\n"
+        "- Liaising with the local authority and other agencies (multi-agency working)\n"
+    )
+    parsed = job_parser.parse_job_description(text)
+    mined = requirement_miner.mine_requirements(parsed)
+    phrases = {m.canonical_phrase for m in mined}
+
+    assert "EYFS" in phrases
+    assert "Child development" in phrases
+    assert "Special educational needs (SEND)" in phrases
+    assert "DBS check" in phrases
+    assert "Safeguarding" in phrases
+    assert "Child protection" in phrases
+    assert "Level 3 childcare qualification" in phrases
+    assert "Key worker (childcare)" in phrases
+    assert "Parental engagement" in phrases
+    assert "Local authority" in phrases
+    assert "Multi-agency working" in phrases
+
+
+def test_send_does_not_false_positive_on_the_verb_send():
+    """
+    Regression-style test for the exact bug class already found with
+    'Java': the UK SEND acronym (Special Educational Needs and
+    Disabilities) shares its lowercase form with the extremely common
+    verb 'send'. Ordinary sentences using 'send' as a verb must not be
+    mistaken for a SEND-related requirement.
+    """
+    text = (
+        "Essential Criteria\n"
+        "- Please send your completed application form by Friday\n"
+        "- We will send further details after shortlisting\n"
+    )
+    parsed = job_parser.parse_job_description(text)
+    mined = requirement_miner.mine_requirements(parsed)
+    phrases = {m.canonical_phrase for m in mined}
+
+    assert "Special educational needs (SEND)" not in phrases

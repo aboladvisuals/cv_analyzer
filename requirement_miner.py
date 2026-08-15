@@ -148,6 +148,49 @@ KNOWN_PHRASES: dict[str, list[str]] = {
     # Compliance / governance
     "GDPR": ["gdpr", "data protection", "data privacy"],
     "Data governance": ["data governance"],
+
+    # Early years / childcare / local government vocabulary
+    # NOTE on naming: "SEND" is the standard UK acronym for Special
+    # Educational Needs and Disabilities, but its lowercase form is also
+    # the extremely common verb "send" — exactly the false-positive risk
+    # already found with "Java" matching "cup of java". The canonical
+    # name and every surface form below deliberately avoid the bare
+    # word "send" for that reason.
+    "EYFS": ["eyfs", "early years foundation stage"],
+    "Safeguarding": ["safeguarding"],
+    "Special educational needs (SEND)": [
+        "special educational needs", "send coordinator", "senco",
+    ],
+    "Ofsted": ["ofsted"],
+    "Child development": ["child development"],
+    "Paediatric first aid": ["paediatric first aid", "pediatric first aid"],
+    "DBS check": ["dbs check", "disclosure and barring service"],
+    "Behaviour management": ["behaviour management", "behavior management"],
+    "Parental engagement": [
+        "parental engagement", "parent engagement", "parent and carer engagement",
+    ],
+    "Child protection": ["child protection"],
+    "Multi-agency working": ["multi-agency working", "multi agency working"],
+    "Level 3 childcare qualification": [
+        "level 3 childcare", "cache level 3", "nvq level 3 childcare",
+    ],
+    # NOTE on "Key worker": in early years settings this specifically
+    # means the practitioner assigned to a child's individual care —
+    # not the broader "essential worker" sense from the pandemic era.
+    # Two-word phrases carry much lower false-positive risk than bare
+    # single words (see the "Agile" note above for the general
+    # principle), so this is kept without further hedging.
+    "Key worker (childcare)": ["key worker"],
+    # NOTE on "Inclusive practice": deliberately includes bare
+    # "inclusion" as a surface form, similar to the "Agile" trade-off —
+    # "inclusion" is a common word in general diversity/equality
+    # language too, not exclusively an early-years term. Accepted
+    # because the alternative (requiring extra context) would miss most
+    # genuine early-years mentions, which are very often just "inclusion".
+    "Inclusive practice": ["inclusive practice", "inclusion"],
+    "Local authority": ["local authority", "local government"],
+    "Case management": ["case management"],
+    "Social work": ["social work", "social worker"],
 }
 
 
