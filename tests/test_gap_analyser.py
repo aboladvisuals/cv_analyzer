@@ -17,7 +17,7 @@ import frequency_analyser
 import evidence_mapper
 import gap_analyser
 from config import EvidenceStatus, RequirementCategory, GapPriority
-from gap_analyser import GapMessageType
+from gap_analyser import GapMessageType, GapAnalysisResult, GapAnalysisEntry
 
 
 CV_PATH = config.SAMPLE_DATA_DIR / "sample_cv_jordan_ellis.txt"
@@ -143,3 +143,73 @@ def test_result_grouping_helpers_are_consistent_with_entries():
     assert all(e.message_type == GapMessageType.TRANSFERABLE_EVIDENCE for e in result.transferable)
     assert all(e.message_type == GapMessageType.CONSIDER_DEVELOPING for e in result.genuine_gaps)
     assert all(e.priority == GapPriority.HIGH for e in result.high_priority_gaps)
+
+
+def test_confidence_summary_counts_only_essential_criteria():
+    result = _build_gap_result()
+    summary = gap_analyser.summarise_confidence(result)
+
+    essential_entries = [e for e in result.entries if e.target_jd_category == RequirementCategory.REQUIRED]
+    assert summary.essential_total == len(essential_entries)
+    assert summary.essential_total > 0  # sanity check the sample data has essentials
+    assert summary.essential_strong + summary.essential_partial + summary.essential_missing <= summary.essential_total
+
+
+def test_confidence_summary_verdict_reflects_strong_evidence_ratio():
+    result = _build_gap_result()
+    summary = gap_analyser.summarise_confidence(result)
+
+    # Jordan Ellis's sample CV has strong evidence for every essential
+    # requirement in the target JD — the verdict should say "worth
+    # applying" outright, not a hedged version.
+    assert str(summary.essential_strong) in summary.verdict
+    assert "worth applying" in summary.verdict.lower()
+
+
+def test_confidence_summary_with_no_essential_criteria_does_not_crash():
+    empty_result = GapAnalysisResult(entries=[])
+    summary = gap_analyser.summarise_confidence(empty_result)
+
+    assert summary.essential_total == 0
+    assert "manually" in summary.verdict.lower()
+
+
+def test_confidence_summary_carries_a_disclaimer():
+    result = _build_gap_result()
+    summary = gap_analyser.summarise_confidence(result)
+
+    assert summary.disclaimer == gap_analyser.CONFIDENCE_DISCLAIMER
+    assert "not a prediction" in summary.disclaimer.lower()
+
+
+def test_confidence_summary_low_ratio_gives_cautious_verdict():
+    # Construct a scenario directly rather than via the full pipeline —
+    # 1 of 4 essential criteria genuinely evidenced.
+    entries = [
+        GapAnalysisEntry(
+            requirement="SQL", jd_frequency="1/1", target_jd_category=RequirementCategory.REQUIRED,
+            evidence_status="strong_match", evidence_source="experience", evidence_snippet="...",
+            message_type=GapMessageType.HAS_SKILL, message="...", priority="none",
+        ),
+        GapAnalysisEntry(
+            requirement="Python", jd_frequency="1/1", target_jd_category=RequirementCategory.REQUIRED,
+            evidence_status="missing", evidence_source="", evidence_snippet="",
+            message_type=GapMessageType.CONSIDER_DEVELOPING, message="...", priority="high",
+        ),
+        GapAnalysisEntry(
+            requirement="Excel", jd_frequency="1/1", target_jd_category=RequirementCategory.REQUIRED,
+            evidence_status="missing", evidence_source="", evidence_snippet="",
+            message_type=GapMessageType.CONSIDER_DEVELOPING, message="...", priority="high",
+        ),
+        GapAnalysisEntry(
+            requirement="Power BI", jd_frequency="1/1", target_jd_category=RequirementCategory.REQUIRED,
+            evidence_status="missing", evidence_source="", evidence_snippet="",
+            message_type=GapMessageType.CONSIDER_DEVELOPING, message="...", priority="high",
+        ),
+    ]
+    result = GapAnalysisResult(entries=entries)
+    summary = gap_analyser.summarise_confidence(result)
+
+    assert summary.essential_total == 4
+    assert summary.essential_strong == 1
+    assert "building more evidence" in summary.verdict.lower()

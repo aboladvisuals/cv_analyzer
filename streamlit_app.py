@@ -25,6 +25,7 @@ import streamlit as st
 
 import config
 import app
+import gap_analyser
 import optimiser
 import ai_phrasing
 import reference_data
@@ -205,8 +206,17 @@ with tab_evidence:
         ]
         st.dataframe(table_data, use_container_width=True, hide_index=True)
 
-        st.subheader("Gap Analysis Summary")
         gap_result = bundle.gap_result
+        confidence = gap_analyser.summarise_confidence(gap_result)
+        if confidence.essential_total > 0 and confidence.essential_strong / confidence.essential_total >= 0.8:
+            st.success(confidence.verdict)
+        elif confidence.essential_total > 0 and confidence.essential_strong / confidence.essential_total >= 0.5:
+            st.warning(confidence.verdict)
+        else:
+            st.error(confidence.verdict)
+        st.caption(confidence.disclaimer)
+
+        st.subheader("Gap Analysis Summary")
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Strong matches", len(gap_result.strong_matches))
         col2.metric("Transferable", len(gap_result.transferable))

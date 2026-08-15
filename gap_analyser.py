@@ -95,6 +95,80 @@ def analyse_gaps(matrix: EvidenceMatrixResult) -> GapAnalysisResult:
     return GapAnalysisResult(entries=entries)
 
 
+# ---------------------------------------------------------------------------
+# "Confidence to apply" one-liner — a plain-language summary of how many
+# of the target JD's own ESSENTIAL (required) criteria have genuine
+# evidence, so the candidate doesn't have to read the whole matrix
+# themselves just to get a first read on whether it's worth applying.
+# ---------------------------------------------------------------------------
+
+CONFIDENCE_DISCLAIMER = (
+    "This is a simple guide based on essential-criteria evidence only — "
+    "not a prediction of interview success, and not an assessment made "
+    "by any employer."
+)
+
+
+@dataclass
+class ConfidenceSummary:
+    essential_total: int
+    essential_strong: int   # direct or transferable evidence
+    essential_partial: int  # weaker evidence, worth strengthening
+    essential_missing: int  # no evidence at all
+    verdict: str
+    disclaimer: str = CONFIDENCE_DISCLAIMER
+
+
+def summarise_confidence(gap_result: GapAnalysisResult) -> ConfidenceSummary:
+    """
+    Looks ONLY at requirements the target job description itself marked
+    as required/essential — not preferred, not responsibilities, and not
+    cross-JD frequency (consistent with this module's existing rule that
+    frequency is never a proxy for importance). "Strong" evidence means
+    HAS_SKILL or TRANSFERABLE_EVIDENCE — genuine evidence, not just a
+    partial match — so the verdict stays conservative rather than
+    optimistic.
+    """
+    essential_entries = [
+        e for e in gap_result.entries if e.target_jd_category == RequirementCategory.REQUIRED
+    ]
+    total = len(essential_entries)
+    strong = sum(
+        1 for e in essential_entries
+        if e.message_type in (GapMessageType.HAS_SKILL, GapMessageType.TRANSFERABLE_EVIDENCE)
+    )
+    partial = sum(1 for e in essential_entries if e.message_type == GapMessageType.NEEDS_STRONGER_EVIDENCE)
+    missing = sum(1 for e in essential_entries if e.message_type == GapMessageType.CONSIDER_DEVELOPING)
+
+    if total == 0:
+        verdict = (
+            "No explicit essential criteria were detected in the target job "
+            "description — review it manually before applying."
+        )
+    else:
+        ratio = strong / total
+        if ratio >= 0.8:
+            verdict = f"{strong} of {total} essential criteria met — worth applying."
+        elif ratio >= 0.5:
+            verdict = (
+                f"{strong} of {total} essential criteria met — worth applying, "
+                f"but consider strengthening the rest first."
+            )
+        else:
+            verdict = (
+                f"Only {strong} of {total} essential criteria met — consider "
+                f"building more evidence before applying."
+            )
+
+    return ConfidenceSummary(
+        essential_total=total,
+        essential_strong=strong,
+        essential_partial=partial,
+        essential_missing=missing,
+        verdict=verdict,
+    )
+
+
 def _build_entry(row: EvidenceMatrixRow) -> GapAnalysisEntry:
     message_type = _message_type_for_status(row.evidence_status)
     message = _build_message(row, message_type)

@@ -139,6 +139,10 @@ def print_evidence_matrix(matrix: EvidenceMatrixResult) -> None:
 
 
 def print_gap_summary(gap_result: GapAnalysisResult) -> None:
+    confidence = gap_analyser.summarise_confidence(gap_result)
+    print(f"\n{confidence.verdict}")
+    print(f"({confidence.disclaimer})")
+
     print("\n=== HIGH PRIORITY GAPS ===")
     if not gap_result.high_priority_gaps:
         print("  None — every required item has at least some evidence.")
