@@ -1,0 +1,18 @@
+{
+  "name": "United States",
+  "key_conventions": [
+    "Commonly called a 'resume', not a 'CV' (in the US, 'CV' is typically reserved for academic or research contexts)",
+    "Usually kept to 1 page, or up to 2 pages for more senior candidates",
+    "Typically no photo, date of birth, or marital status included",
+    "Often includes a brief summary or objective statement near the top"
+  ],
+  "regulatory_considerations": [
+    "US equal employment law discourages employers from requesting information like age, marital status, or a photo, so this is commonly left off resumes",
+    "Work authorization status is usually addressed separately during the application process, not necessarily stated on the resume itself"
+  ],
+  "terminology_notes": [
+    "'Resume' rather than 'CV' in most industries",
+    "'Objective' or 'Summary' rather than 'Personal statement'"
+  ],
+  "source_note": "General conventions only, based on common US recruitment practice — individual employers and sectors vary, and the job description or application instructions should always take priority."
+}

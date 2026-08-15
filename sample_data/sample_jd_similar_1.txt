@@ -1,0 +1,22 @@
+Riverside NHS Trust
+Data Analyst
+
+Essential Criteria
+- Proficient in SQL for querying large datasets
+- Experience with Power BI or similar visualisation tools
+- Strong Excel skills
+- Ability to present findings clearly to a range of audiences
+
+Desirable Criteria
+- Experience in an NHS or healthcare setting
+- Python or R for data analysis
+
+Key Responsibilities
+- Deliver accurate, timely performance reports
+- Support service improvement through data insight
+- Work closely with clinical and operational stakeholders
+
+Competencies
+- Analytical thinking
+- Communication
+- Attention to detail

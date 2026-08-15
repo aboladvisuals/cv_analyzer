@@ -1,0 +1,25 @@
+# Phase 1 dependencies only.
+# We add libraries phase-by-phase, only when a phase actually needs them —
+# not upfront — so it's always clear why each package is here.
+
+python-dotenv==1.0.1   # loads .env files for future AI API config (Phase 8+)
+pytest==8.3.3           # testing framework, used from Phase 2 onward
+
+# Added for CV/job-description parsing (cv_parser.py, job_parser.py):
+pdfplumber==0.11.4      # PDF text extraction
+python-docx==1.1.2      # DOCX reading and writing (also used by report_generator.py)
+
+# Added for report export (report_generator.py):
+reportlab==4.2.5        # PDF report generation
+
+# Added for the web UI (streamlit_app.py):
+streamlit==1.39.0
+
+# Added for the optional AI phrasing layer (ai_phrasing.py):
+requests==2.32.3
+
+# Libraries that WILL be added in later phases (left here as a roadmap,
+# commented out until the relevant phase actually needs them):
+# pandas              -> structured data handling, once volume warrants it
+# spacy / nltk        -> deeper NLP entity + keyword extraction
+# scikit-learn        -> semantic similarity matching

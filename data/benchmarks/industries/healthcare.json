@@ -1,0 +1,17 @@
+{
+  "name": "Healthcare",
+  "key_conventions": [
+    "NHS and other UK healthcare employers often use a structured supporting statement that addresses each point in the person specification (Essential and Desirable criteria) directly",
+    "Clear evidence of patient safety awareness, safeguarding knowledge, and confidentiality is commonly valued",
+    "Relevant clinical or information governance training is often listed explicitly where applicable"
+  ],
+  "regulatory_considerations": [
+    "Roles involving patient data are commonly subject to information governance and data protection requirements (e.g. NHS Information Governance standards, UK GDPR)",
+    "Many UK healthcare roles require a Disclosure and Barring Service (DBS) check"
+  ],
+  "terminology_notes": [
+    "'Person specification' — the document listing Essential and Desirable criteria a candidate is expected to address",
+    "'Information governance' — how patient and health data is handled securely and appropriately"
+  ],
+  "source_note": "General conventions only, based on common healthcare-sector recruitment practice — individual employers, trusts, and roles vary, and the specific job description or person specification should always take priority."
+}

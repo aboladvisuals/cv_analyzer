@@ -1,0 +1,23 @@
+Westgate Community Health Trust
+Data Analyst
+
+Essential Requirements
+- SQL for data extraction and manipulation
+- Excel to an advanced level
+- Experience communicating data to non-technical stakeholders
+- Educated to degree level or equivalent
+
+Desirable Requirements
+- Experience with NHS data
+- Python for data analysis
+- Power BI
+
+Main Duties
+- Produce regular quality and performance reports
+- Improve existing reporting processes
+- Respond to ad-hoc data requests from service leads
+
+Core Values
+- Public focus
+- Collaboration
+- Continuous improvement

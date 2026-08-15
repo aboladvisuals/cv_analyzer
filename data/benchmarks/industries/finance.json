@@ -1,0 +1,17 @@
+{
+  "name": "Finance",
+  "key_conventions": [
+    "Professional qualifications and certifications (e.g. ACCA, CFA, CIMA) are often listed prominently where held",
+    "Accuracy, regulatory compliance, and discretion with sensitive financial data are commonly emphasised",
+    "Quantifiable achievements (e.g. cost savings, portfolio size, process improvements) are often valued"
+  ],
+  "regulatory_considerations": [
+    "Many finance roles are subject to specific regulatory requirements (e.g. FCA regulation in the UK) and may require background or reference checks",
+    "Handling of client financial data is commonly subject to data protection and confidentiality requirements"
+  ],
+  "terminology_notes": [
+    "'FCA' — the Financial Conduct Authority, the main UK financial services regulator",
+    "'AML' — anti-money laundering, a common compliance topic in finance roles"
+  ],
+  "source_note": "General conventions only, based on common finance-sector recruitment practice — individual employers, regulators, and roles vary, and the specific job description should always take priority."
+}

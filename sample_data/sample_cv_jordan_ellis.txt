@@ -1,0 +1,38 @@
+Jordan Ellis
+Data Analyst
+
+Summary
+Analytically-minded professional with experience turning messy data into
+clear, actionable insight. Comfortable working across SQL, Excel and
+Power BI, with a growing interest in healthcare and public-sector data.
+
+Skills
+SQL, Excel (advanced), Power BI, Python (pandas, basic), data cleaning,
+dashboard design, stakeholder reporting, data visualisation
+
+Experience
+Data Assistant, GreenTech Analytics (2023-Present)
+- Built and maintained SQL queries to support weekly reporting for three
+  internal teams.
+- Designed a Power BI dashboard tracking operational KPIs, reducing
+  manual reporting time by several hours per week.
+- Cleaned and validated incoming datasets before they reached the
+  reporting pipeline, catching recurring data-quality issues.
+
+Customer Service Advisor, Northside Retail (2021-2023)
+- Handled day-to-day customer queries and escalations.
+- Logged and tracked recurring issues in a shared spreadsheet, which
+  was later used to inform a process change.
+
+Projects
+NHS A&E Public Data Analysis (personal project)
+- Used publicly available NHS A&E attendance data to explore seasonal
+  patterns in wait times.
+- Built a small Power BI report presenting findings, including basic
+  trend and outlier analysis.
+
+Education
+BSc Mathematics, University of Northtown (2018-2021)
+
+Certifications
+Google Data Analytics Professional Certificate

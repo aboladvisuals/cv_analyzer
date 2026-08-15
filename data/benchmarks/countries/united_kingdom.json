@@ -1,0 +1,19 @@
+{
+  "name": "United Kingdom",
+  "key_conventions": [
+    "Commonly called a 'CV', not a 'resume'",
+    "Often around 2 pages long; sometimes longer for senior or academic roles",
+    "Typically no photo, date of birth, marital status, or National Insurance number included",
+    "Reverse-chronological format (most recent role first) is the most common structure",
+    "A personal or supporting statement addressing the job description directly is often expected for public-sector roles, especially NHS and Civil Service applications"
+  ],
+  "regulatory_considerations": [
+    "UK equality law discourages employers from requesting information like age, marital status, or a photo, so many candidates choose not to include this on their CV",
+    "Right-to-work status is usually confirmed separately during the recruitment process, not necessarily stated on the CV itself"
+  ],
+  "terminology_notes": [
+    "'CV' rather than 'resume'",
+    "'Personal statement' or 'supporting statement' rather than 'summary', particularly in public-sector applications"
+  ],
+  "source_note": "General conventions only, based on common UK recruitment practice — individual employers and sectors vary, and the job description or application instructions should always take priority."
+}

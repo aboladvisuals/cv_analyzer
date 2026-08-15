@@ -1,0 +1,28 @@
+Northtown NHS Foundation Trust
+Data Analyst (Band 5)
+
+We are looking for a Data Analyst to join our informatics team, supporting
+performance reporting across several clinical directorates.
+
+Essential Criteria
+- Experience using SQL to extract and manipulate data
+- Strong Excel skills, including pivot tables and formulas
+- Experience building dashboards or reports (e.g. Power BI)
+- Ability to communicate data insights to non-technical stakeholders
+- Educated to degree level or equivalent experience
+
+Desirable Criteria
+- Experience working with healthcare or NHS data
+- Familiarity with Python for data analysis
+- Knowledge of NHS data quality standards
+
+Key Responsibilities
+- Produce regular performance and quality reports for clinical teams
+- Maintain and improve existing dashboards
+- Investigate and resolve data quality issues at source
+- Support ad-hoc analysis requests from service leads
+
+Values and Behaviours
+- Patient and public focus in all analytical work
+- Strong teamwork and collaboration across departments
+- Commitment to continuous improvement

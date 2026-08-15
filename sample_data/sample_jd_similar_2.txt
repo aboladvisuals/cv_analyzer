@@ -1,0 +1,22 @@
+Eastfield Health Board
+Data Analyst - Performance Team
+
+Essential Criteria
+- Strong SQL skills
+- Advanced Excel (formulas, pivot tables)
+- Experience building and maintaining dashboards
+- Degree in a numerate subject or equivalent experience
+
+Desirable Criteria
+- Power BI experience
+- Knowledge of healthcare data standards
+
+Responsibilities
+- Maintain performance dashboards for senior management
+- Investigate data quality issues
+- Provide ad-hoc analysis to support decision-making
+
+Behaviours
+- Patient-centred approach
+- Teamwork
+- Continuous improvement mindset

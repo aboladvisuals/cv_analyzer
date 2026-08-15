@@ -1,0 +1,17 @@
+{
+  "name": "Technology",
+  "key_conventions": [
+    "Technical skills, tools, and programming languages are often listed clearly and prominently",
+    "Links to a portfolio, GitHub profile, or personal projects are commonly included where relevant",
+    "Specific, quantifiable outcomes (e.g. performance improvements, users served) are often valued over general descriptions"
+  ],
+  "regulatory_considerations": [
+    "Roles involving personal data commonly require awareness of data protection principles (e.g. UK/EU GDPR)",
+    "Some technology roles, especially in regulated sectors like finance or healthcare, may require specific security clearances or background checks"
+  ],
+  "terminology_notes": [
+    "'Tech stack' — the specific combination of programming languages, frameworks, and tools used",
+    "'Full-stack' — experience across both front-end and back-end development"
+  ],
+  "source_note": "General conventions only, based on common technology-sector recruitment practice — individual employers and roles vary, and the specific job description should always take priority."
+}
